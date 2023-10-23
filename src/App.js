@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { EyeIcon, EyeOffIcon } from '@heroicons/react/solid';
 import CryptoJS from "crypto-js";
-import backgroundImage from './background.png'; // Убедитесь, что путь правильный
+import backgroundImage from './background.png';
 
 function App() {
   const [password, setPassword] = useState("");
@@ -40,7 +39,6 @@ function App() {
   const encryptText = () => {
     try 
     {
-      displayError("");
       if (password.length === 32 && plainText !== "") 
       {
         generateIV();
@@ -56,9 +54,13 @@ function App() {
         const encryptedTextWithIv = iv + encrypted.toString();
         setEncryptedFromPlain(encryptedTextWithIv);
       } 
+      else if(password.length != 32)
+      {
+        displayError(`Пароль должен быть в 32 символа (${password.length})`);
+      }
       else 
       {
-        displayError("Нет пароля или текста для шифрования");
+        displayError("Нет текста для шифрования");
       }
     }
     catch (error) 
@@ -70,7 +72,6 @@ function App() {
   const decryptText = () => {
     try 
     {
-      displayError("");
       if (password.length === 32 && encText) 
       {
         const ivFromEncryptedText = encText.substr(0, 16);
@@ -84,11 +85,16 @@ function App() {
           padding: CryptoJS.pad.Pkcs7
         }).toString(CryptoJS.enc.Utf8);
   
-        setDecText(decrypted);
+        if (decrypted) setDecText(decrypted);
+        else displayError("Неверный пароль или текст");
       } 
+      else if(password.length != 32)
+      {
+        displayError(`Пароль должен быть в 32 символа (${password.length})`);
+      }
       else 
       {
-        displayError("Нет пароля или зашифрованного текста");
+        displayError("Нет зашифрованного текста");
       }
     } 
     catch (error) 
@@ -97,49 +103,57 @@ function App() {
     }
   };
 
+  const handleMouseEnter = () => {
+    setShowPassword(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowPassword(false);
+  };
+
   return (
     <div 
-    style={{ 
-      backgroundImage: `url(${backgroundImage})`, 
-      backgroundPosition: 'center', 
-      backgroundSize: 'cover', 
-      backgroundRepeat: 'no-repeat'
-    }}
-    className="min-h-screen flex flex-col justify-center sm:py-12"
+      style={{ 
+        backgroundImage: `url(${backgroundImage})`, 
+        backgroundPosition: 'center', 
+        backgroundSize: 'cover', 
+        backgroundRepeat: 'no-repeat'
+      }}
+      className="min-h-screen flex flex-col justify-center sm:py-12"
     >
       <div className="relative py-3 sm:max-w-xl sm:mx-auto">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
         <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
           <div className="max-w-md mx-auto">
-             
-            {
-              showError && (
-                <div className="fixed top-0 middle-0 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded absolute z-50 m-4" role="alert">
-                  <strong className="font-bold">Ошибка: </strong>
-                  <span className="block sm:inline"> {error} </span>
-                </div>
-              )
-            }
-
-            {/* Поле ввода пароля */}
-            <div className="flex justify-between items-center mb-4">
-              <input
-                type={showPassword ? "text" : "password"}
-                className="text-sm sm:text-base placeholder-gray-500 pl-10 pr-4 rounded-lg border border-gray-300 w-full py-2"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-600 p-2 focus:outline-none"
-              >
-                {showPassword ? (
-                  <EyeOffIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                ) : (
-                  <EyeIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                )}
-              </button>
+            <div className="relative mb-4"> {/* Позиционирование относительно этого div */}
+              {
+                showError && (
+                  <div 
+                    style={{
+                      position: 'absolute', // позиционирование сообщения
+                      top: '-60px', // увеличенное значение, чтобы создать больше пространства между сообщением и полем ввода
+                      left: '50%', // центрирование сообщения по горизонтали
+                      transform: 'translateX(-50%)', // продолжает центрирование
+                      zIndex: 50, // чтобы элемент оставался поверх других
+                      whiteSpace: 'nowrap', // предотвращает переносы строк в сообщении об ошибке
+                    }}
+                    className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" // стилизация блока ошибок
+                    role="alert"
+                  >
+                    <span className="block sm:inline"> {error} </span>
+                  </div>
+                )
+              }
+              <div className="flex justify-between items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="text-sm sm:text-base placeholder-gray-500 pl-10 pr-4 rounded-lg border border-gray-300 w-full py-2"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                />
+              </div>
             </div>
 
             {/* Карточка для шифрования */}
